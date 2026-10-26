@@ -35,10 +35,12 @@ jobs:
       - name: Generate Android platform files
         run: flutter create . --platforms android --org com.littleexplorers
 
-      - name: Configure app (Arabic name, minSdk 23)
+      - name: Configure app (Arabic name, minSdk 23, Kotlin 2.1.0)
         run: |
+          # اسم التطبيق على شاشة الجهاز
           sed -i 's/android:label="[^"]*"/android:label="عالم المستكشفين الصغار"/' \
             android/app/src/main/AndroidManifest.xml
+          # minSdk 23 (يطلبه إضافة الصوت audioplayers) — نمطا Groovy وKotlin DSL
           if [ -f android/app/build.gradle ]; then
             sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' android/app/build.gradle || true
             sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle || true
@@ -46,6 +48,18 @@ jobs:
           if [ -f android/app/build.gradle.kts ]; then
             sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle.kts || true
           fi
+          # ★ رفع Kotlin Gradle plugin إلى 2.1.0 — يطلبه flutter_tts مع محرك Flutter 3.27
+          if [ -f android/settings.gradle ]; then
+            sed -i 's/id "org.jetbrains.kotlin.android" version "[^"]*"/id "org.jetbrains.kotlin.android" version "2.1.0"/' android/settings.gradle || true
+            sed -i 's/id("org.jetbrains.kotlin.android") version "[^"]*"/id("org.jetbrains.kotlin.android") version "2.1.0"/' android/settings.gradle || true
+          fi
+          if [ -f android/settings.gradle.kts ]; then
+            sed -i 's/id("org.jetbrains.kotlin.android") version "[^"]*"/id("org.jetbrains.kotlin.android") version "2.1.0"/' android/settings.gradle.kts || true
+          fi
+          if [ -f android/build.gradle ]; then
+            sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "2.1.0"/' android/build.gradle || true
+          fi
+          # اختبار القالب الافتراضي يشير لفئة MyApp غير الموجودة — يُحذف
           rm -f test/widget_test.dart
 
       - name: Install dependencies
